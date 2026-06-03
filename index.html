@@ -1,4 +1,33 @@
+None selected 
 
+Skip to content
+Using Gmail with screen readers
+in:draft 
+Enable desktop notifications for Gmail.
+   OK  No thanks
+Conversations
+Draft
+(no subject)
+ 
+Attachment:
+index-3.html
+5:10 PM
+me, Draft
+2
+(no subject)
+ - ---------- Forwarded message --------- From: Anurag Shrivastava <anurag.atossb@gmail.com> Date: Wed, Jun 3, 2026 at 4:49 PM Subject: To: Dibakar Gogoi <gogoidibakar992@gmail.com> https://
+ 
+4:57 PM
+Draft
+(no subject)
+ 
+Attachment:
+टिकट मणिपुर तो tzp.pdf
+May 25
+0% of 5,120 GB used
+Terms · Privacy · Program Policies
+Last account activity: 24 minutes ago
+Details
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -93,6 +122,39 @@
   .s-fhq      .shdr{background:#4a1a6b;color:#fff}
   .s-docs     .shdr{background:#6b3a00;color:#fff}
   .s-done     .shdr{background:#3a3a3a;color:#fff}
+
+  /* WIP limit styles */
+  .wip-bar{height:4px;background:rgba(255,255,255,.2);border-radius:2px;margin-top:6px;overflow:hidden}
+  .wip-fill{height:100%;border-radius:2px;transition:width .4s,background .3s}
+  .wip-ok   .wip-fill{background:#81c784}
+  .wip-warn .wip-fill{background:#ffb74d}
+  .wip-over .wip-fill{background:#ef5350}
+  .wip-label{font-size:9px;opacity:.75;margin-top:2px;letter-spacing:.3px;display:flex;justify-content:space-between;align-items:center}
+  .wip-tag{border-radius:3px;padding:1px 5px;font-size:9px;font-weight:700}
+  .wip-ok   .wip-tag{background:rgba(129,199,132,.25);color:#c8ffc8}
+  .wip-warn .wip-tag{background:rgba(255,183,77,.25);color:#ffe0a0}
+  .wip-over .wip-tag{background:rgba(239,83,80,.3);color:#ffcdd2}
+
+  /* WIP blocked column */
+  .scol.wip-blocked .sbody{border-color:#ff8f00;border-width:2px;background:#fffbf0}
+  .scol.wip-blocked .shdr{outline:2px solid #ff8f00;outline-offset:-2px}
+  .wip-blocked-banner{background:#ff8f00;color:#fff;font-size:11px;font-weight:700;text-align:center;padding:5px 8px;border-radius:4px;letter-spacing:.3px;display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:6px}
+  .wip-override-btn{background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:3px;padding:2px 8px;font-size:10px;font-weight:700;cursor:pointer;font-family:'Source Sans 3',sans-serif;white-space:nowrap}
+  .wip-override-btn:hover{background:rgba(255,255,255,.4)}
+
+  /* Backlog column special styling */
+  .scol.is-backlog .sbody{background:rgba(26,58,107,.03);border-color:#b0bec5}
+  .scol.is-backlog .shdr{position:relative}
+  .backlog-badge{background:rgba(255,255,255,.15);border-radius:3px;padding:1px 6px;font-size:9px;letter-spacing:.4px;text-transform:uppercase;margin-left:4px}
+
+  /* Pull prompt — appears at top of next stage when backlog has items */
+  .pull-prompt{background:linear-gradient(135deg,#e8f5e9,#f1f8e9);border:1.5px dashed #66bb6a;border-radius:5px;padding:7px 10px;margin-bottom:6px;cursor:pointer;transition:all .15s}
+  .pull-prompt:hover{background:#e8f5e9;border-color:#43a047}
+  .pull-prompt-title{font-size:11px;font-weight:700;color:#2e7d32;display:flex;align-items:center;gap:5px}
+  .pull-prompt-sub{font-size:10px;color:#558b2f;margin-top:2px}
+
+  /* Priority sort indicator on backlog */
+  .priority-sort{font-size:10px;color:rgba(255,255,255,.7);margin-top:3px;letter-spacing:.2px}
 
   /* ── CARD ── */
   .card{background:var(--surface);border:1.5px solid var(--border);border-radius:6px;padding:9px 10px 8px;cursor:pointer;transition:box-shadow .15s,transform .15s;position:relative;overflow:hidden}
@@ -328,7 +390,7 @@
           <option value="dc">DC Provisioning</option>
           <option value="ddo">DDO (Fin. Sanction)</option>
           <option value="dig">DIG Provisioning</option>
-          <option value="ig">IG </option>
+          <option value="ig">IG Provisioning</option>
           <option value="fhq">FHQ (Force HQ)</option>
           <option value="docs">Document Generation</option>
           <option value="done">Closed / Completed</option>
@@ -403,22 +465,27 @@
 // ═══════════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════════
-const API_KEY = 'ssb_prov_api_url';
+const API_KEY  = 'ssb_prov_api_url';
 const USER_KEY = 'ssb_prov_user';
-let API_URL = localStorage.getItem(API_KEY) || '';
+// ─── HARDCODE YOUR APPS SCRIPT URL HERE (paste between the quotes) ───
+const HARDCODED_API_URL = '';
+// ─────────────────────────────────────────────────────────────────────
+let API_URL = HARDCODED_API_URL || localStorage.getItem(API_KEY) || 'https://script.google.com/macros/s/AKfycbz_DEa2EHMqvlUO9nkJz2p1tWsBbC5Sv4YLvFfm2xiUWyIg9UtrmNrU8lkeHUMlCLjtsw/exec';
 let currentUser = localStorage.getItem(USER_KEY) || '';
 
+// wip: null = unlimited (backlog or external approval chain)
+// wip: N    = team-controlled WIP limit, enforced with visual warning + override
 const STAGES = [
-  {id:'demand',   label:'Demand\nReceived',   short:'DEM', icon:'📥'},
-  {id:'scrutiny', label:'Scrutiny /\nPut Up',  short:'SCR', icon:'🔍'},
-  {id:'branch',   label:'Branch\nIn-Charge',  short:'BIC', icon:'👤'},
-  {id:'dc',       label:'DC\nProvisioning',   short:'DC',  icon:'🏷️'},
-  {id:'ddo',      label:'DDO\nFin. Sanction', short:'DDO', icon:'💰'},
-  {id:'dig',      label:'DIG\nProvisioning',  short:'DIG', icon:'⭐'},
-  {id:'ig',       label:'IG\n',   short:'IG',  icon:'🎖️'},
-  {id:'fhq',      label:'FHQ\nApproval',       short:'FHQ', icon:'🏛️'},
-  {id:'docs',     label:'Document\nGeneration',short:'DOC',icon:'📄'},
-  {id:'done',     label:'Closed /\nCompleted',short:'✓',  icon:'✅'},
+  {id:'demand',   label:'Demand\nReceived',    short:'DEM', icon:'📥', wip:null,  backlog:true,  desc:'Incoming demands — sorted by priority. Pull into Scrutiny when capacity exists.'},
+  {id:'scrutiny', label:'Scrutiny /\nPut Up',  short:'SCR', icon:'🔍', wip:7,     backlog:false, desc:'DA puts up file on board. Max 7 active — pull highest-priority from Demand.'},
+  {id:'branch',   label:'Branch\nIn-Charge',   short:'BIC', icon:'👤', wip:7,     backlog:false, desc:'Branch IC review. Max 7 — pull from Scrutiny when slot opens.'},
+  {id:'dc',       label:'DC\nProvisioning',    short:'DC',  icon:'🏷️', wip:null,  backlog:false, desc:'DC Provisioning — no WIP limit. External approval timelines apply.'},
+  {id:'ddo',      label:'DDO\nFin. Sanction',  short:'DDO', icon:'💰', wip:null,  backlog:false, desc:'DDO financial sanction / IFA. External dependency.'},
+  {id:'dig',      label:'DIG\nProvisioning',   short:'DIG', icon:'⭐', wip:null,  backlog:false, desc:'DIG Provisioning approval.'},
+  {id:'ig',       label:'IG\nProvisioning',    short:'IG',  icon:'🎖️', wip:null,  backlog:false, desc:'IG Provisioning final approval.'},
+  {id:'fhq',      label:'FHQ\nApproval',       short:'FHQ', icon:'🏛️', wip:null,  backlog:false, desc:'Force Headquarters approval. External dependency.'},
+  {id:'docs',     label:'Document\nGeneration',short:'DOC', icon:'📄', wip:7,     backlog:false, desc:'Generate all documents: Sanction Order, Lines Committee, Issue Register etc. Max 7.'},
+  {id:'done',     label:'Closed /\nCompleted', short:'✓',   icon:'✅', wip:null,  backlog:false, desc:'File closed. All documents generated and filed.'},
 ];
 
 const DOCS = [
@@ -503,10 +570,12 @@ function setSyncing(syncing, msg, err) {
 async function init() {
   showLoading('Initialising…');
 
-  // Check if API URL is saved
+  // Check if API URL is saved or hardcoded
   if (API_URL) {
     document.getElementById('configBanner').classList.add('hidden');
     document.getElementById('apiUrlInput').value = API_URL;
+    // If hardcoded, also save to localStorage so team members don't need to paste
+    if (HARDCODED_API_URL) localStorage.setItem(API_KEY, HARDCODED_API_URL);
   } else {
     document.getElementById('configBanner').classList.remove('hidden');
     hideLoading();
@@ -603,35 +672,158 @@ function getFiltered() {
 }
 
 // ═══════════════════════════════════════════
+// PRIORITY SORT — Urgent first, then by deadline asc, then by age desc
+// ═══════════════════════════════════════════
+function prioritySort(fileList) {
+  const now = new Date();
+  return [...fileList].sort((a, b) => {
+    // 1. Urgent first
+    const aUrg = a.priority === 'urgent' ? 0 : 1;
+    const bUrg = b.priority === 'urgent' ? 0 : 1;
+    if (aUrg !== bUrg) return aUrg - bUrg;
+    // 2. Overdue next (earliest deadline first)
+    const aDl = a.deadline ? new Date(a.deadline) : null;
+    const bDl = b.deadline ? new Date(b.deadline) : null;
+    if (aDl && bDl) return aDl - bDl;
+    if (aDl) return -1;
+    if (bDl) return 1;
+    // 3. Oldest file last (most aged = highest wait = pull first)
+    const aAge = a.date ? new Date(a.date) : now;
+    const bAge = b.date ? new Date(b.date) : now;
+    return aAge - bAge;
+  });
+}
+
+// ═══════════════════════════════════════════
+// WIP STATUS
+// ═══════════════════════════════════════════
+function wipStatus(stage, count) {
+  if (stage.wip === null) return {status:'none', pct:0};
+  const pct = Math.min((count / stage.wip) * 100, 100);
+  let status = 'ok';
+  if (count >= stage.wip) status = 'over';
+  else if (count >= stage.wip * 0.75) status = 'warn';
+  return {status, pct, count, limit: stage.wip};
+}
+
+// ═══════════════════════════════════════════
 // BOARD RENDER
 // ═══════════════════════════════════════════
 function renderBoard() {
-  const filtered = getFiltered();
+  const filtered  = getFiltered();
+  // Always count ALL files per stage for WIP (not filtered subset)
+  const allCounts = {};
+  STAGES.forEach(st => { allCounts[st.id] = files.filter(f => f.stage === st.id).length; });
+
   const board = document.getElementById('board');
   board.innerHTML = '';
   const now = new Date(); now.setHours(0,0,0,0);
 
-  STAGES.forEach(st => {
-    const sf = filtered.filter(f => f.stage === st.id);
+  // Next-stage pull candidate: top-priority file from Demand for Scrutiny, etc.
+  const demandFiles = prioritySort(files.filter(f => f.stage === 'demand'));
+  const nextPullCandidate = demandFiles[0] || null;
+
+  STAGES.forEach((st, stIdx) => {
+    let sf = filtered.filter(f => f.stage === st.id);
+    // Always priority-sort backlog; sort other stages too
+    sf = prioritySort(sf);
+
+    const realCount = allCounts[st.id]; // unfiltered count for WIP
+    const wip = wipStatus(st, realCount);
+    const isBlocked = st.wip !== null && realCount >= st.wip;
+    const isBacklog = st.backlog === true;
+
     const col = document.createElement('div');
-    col.className = `scol`;
+    col.className = `scol${isBlocked ? ' wip-blocked' : ''}${isBacklog ? ' is-backlog' : ''}`;
+
+    // ── HEADER ──
+    let wipBarHtml = '';
+    if (st.wip !== null) {
+      wipBarHtml = `
+        <div class="wip-bar">
+          <div class="wip-fill" style="width:${wip.pct}%"></div>
+        </div>
+        <div class="wip-label">
+          <span>WIP Limit</span>
+          <span class="wip-tag">${realCount} / ${st.wip}</span>
+        </div>`;
+    }
+    const backlogBadge = isBacklog ? `<span class="backlog-badge">BACKLOG</span>` : '';
+    const prioritySortNote = isBacklog ? `<div class="priority-sort">↑ Sorted by priority</div>` : '';
 
     const hdr = document.createElement('div');
-    hdr.className = `shdr s-${st.id}`;
-    hdr.innerHTML = `<div class="shdr-title"><span class="sicon">${st.icon}</span>${st.label.replace('\n','<br>')}</div><span class="scnt">${sf.length}</span>`;
+    hdr.className = `shdr s-${st.id} wip-${wip.status}`;
+    hdr.title = st.desc || '';
+    hdr.innerHTML = `
+      <div>
+        <div class="shdr-title">
+          <span class="sicon">${st.icon}</span>
+          ${st.label.replace('\n','<br>')}${backlogBadge}
+        </div>
+        ${prioritySortNote}
+      </div>
+      <div style="text-align:right">
+        <span class="scnt">${realCount}</span>
+        ${wipBarHtml}
+      </div>`;
 
+    // ── BODY ──
     const body = document.createElement('div');
     body.className = 'sbody';
+
+    // Pull prompt: show at top of Scrutiny if Demand has files and slot exists
+    if (st.id === 'scrutiny' && nextPullCandidate && !isBlocked) {
+      const pp = document.createElement('div');
+      pp.className = 'pull-prompt';
+      pp.onclick = () => openEdit(nextPullCandidate.id);
+      const urg = nextPullCandidate.priority === 'urgent' ? '🔴 ' : '';
+      pp.innerHTML = `
+        <div class="pull-prompt-title">⬇ Pull next file</div>
+        <div class="pull-prompt-sub">${urg}${nextPullCandidate.subject.substring(0,45)}…</div>`;
+      body.appendChild(pp);
+    }
+
+    // WIP blocked banner
+    if (isBlocked) {
+      const banner = document.createElement('div');
+      banner.className = 'wip-blocked-banner';
+      banner.innerHTML = `
+        <span>⚠ WIP LIMIT REACHED (${realCount}/${st.wip})</span>
+        <button class="wip-override-btn" onclick="wipOverride('${st.id}')">Override</button>`;
+      body.appendChild(banner);
+    }
+
     if (!sf.length) {
-      body.innerHTML = '<div class="empty-col">No files</div>';
+      const empty = document.createElement('div');
+      empty.className = 'empty-col';
+      empty.textContent = isBacklog ? 'No pending demands' : 'Clear — pull from previous stage';
+      body.appendChild(empty);
     } else {
       sf.forEach(f => body.appendChild(buildCard(f, now)));
     }
+
     col.appendChild(hdr);
     col.appendChild(body);
     board.appendChild(col);
   });
   updateStats();
+}
+
+// Override WIP block — temporarily allows adding to that stage
+const wipOverrides = new Set();
+function wipOverride(stageId) {
+  wipOverrides.add(stageId);
+  showToast('Override active — you can now move a file into this stage', 'info');
+  renderBoard();
+  // Auto-expire override after one action or 60s
+  setTimeout(() => { wipOverrides.delete(stageId); renderBoard(); }, 60000);
+}
+
+function isWipBlocked(stageId) {
+  if (wipOverrides.has(stageId)) return false;
+  const st = STAGES.find(s => s.id === stageId);
+  if (!st || st.wip === null) return false;
+  return files.filter(f => f.stage === stageId).length >= st.wip;
 }
 
 function buildCard(f, now) {
@@ -799,6 +991,18 @@ async function saveFile() {
   if (!id || !sub) { showToast('File No. and Subject are required', 'err'); return; }
   if (!API_URL) { showToast('Connect to Google Sheets first', 'err'); return; }
 
+  const newStage = document.getElementById('f_stage').value;
+
+  // WIP check — only for stage changes on existing files, or new files going straight to WIP stage
+  const isNewFile = !editingId;
+  const existingFile = editingId ? files.find(f => f.id === editingId) : null;
+  const stageChanged = existingFile ? existingFile.stage !== newStage : newStage !== 'demand';
+
+  if (stageChanged && isWipBlocked(newStage)) {
+    showToast(`⚠ WIP limit reached for "${STAGES.find(s=>s.id===newStage)?.label.replace('\n',' ')}". Use Override on the column to proceed.`, 'err');
+    return;
+  }
+
   const docs = {};
   DOCS.forEach(d => {
     const cb = document.querySelector(`[data-doc="${d.key}"]`);
@@ -907,5 +1111,5 @@ init();
 </script>
 </body>
 </html>
-index-2.html
-Displaying index-2.html.
+index-3.html
+ </b> Made By Anurag Shrivastava, DC , ATO </b>
